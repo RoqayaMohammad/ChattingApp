@@ -1,6 +1,8 @@
 ﻿using ChattingApp.Data;
+using ChattingApp.DTOs;
 using ChattingApp.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -16,19 +18,26 @@ namespace ChattingApp.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<AppUser>> register(string username,string password)
+        public async Task<ActionResult<AppUser>> Register([FromBody]RegisterDto registerDto)
         { 
+            if(await UserExists(registerDto.UserName)) return BadRequest();
+
           using var hmac=new HMACSHA512();
             var user = new AppUser
             {
-                UserName = username,
-                PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password)),
+                UserName = registerDto.UserName.ToLower(),
+                PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
                 PasswordSalt = hmac.Key
 
             };
             _context.AppUsers.Add(user);
             await _context.SaveChangesAsync();
             return Ok(user);
+        }
+
+        private async Task<bool> UserExists(string username)
+        {
+            return await _context.AppUsers.AnyAsync(x=> x.UserName == username);
         }
     }
 }
