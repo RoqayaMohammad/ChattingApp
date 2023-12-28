@@ -6,9 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ChattingApp.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UserController : ControllerBase
+    
+    public class UserController : BaseApiController
     {
         private readonly AppDbContext _context;
         public UserController(AppDbContext context)
