@@ -18,7 +18,7 @@ namespace ChattingApp.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<AppUser>> Register([FromBody]RegisterDto registerDto)
+        public async Task<ActionResult<AppUser>> Register(RegisterDto registerDto)
         { 
             if(await UserExists(registerDto.UserName)) return BadRequest();
 
@@ -35,9 +35,26 @@ namespace ChattingApp.Controllers
             return Ok(user);
         }
 
-        private async Task<bool> UserExists(string username)
+        [HttpPost("login")]
+        public async Task<ActionResult<AppUser>> Login(LoginDto loginDto)
         {
-            return await _context.AppUsers.AnyAsync(x=> x.UserName == username);
+            var user = await _context.AppUsers.SingleOrDefaultAsync(x=> x.UserName==loginDto.UserName);
+            if(user==null) return Unauthorized("invalid username");
+
+            using var hmac = new HMACSHA512(user.PasswordSalt);
+            var ComputedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
+            for (int i = 0; i < ComputedHash.Length; i++)
+
+            {
+                if (ComputedHash[i] != user.PasswordHash[i]) return Unauthorized("invalid Password");
+}
+            return user;
+
         }
+
+            private async Task<bool> UserExists(string username)
+            {
+            return await _context.AppUsers.AnyAsync(x=> x.UserName == username);
+            }
     }
 }
