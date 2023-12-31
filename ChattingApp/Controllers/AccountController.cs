@@ -1,5 +1,6 @@
 ﻿using ChattingApp.Data;
 using ChattingApp.DTOs;
+using ChattingApp.Interfaces;
 using ChattingApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,17 +9,21 @@ using System.Text;
 
 namespace ChattingApp.Controllers
 {
+
     public class AccountController:BaseApiController
     {
         private readonly AppDbContext _context;
-        public AccountController(AppDbContext context)
+        private readonly ITokenService _tokenService;
+        public AccountController(AppDbContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
+
 
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<AppUser>> Register(RegisterDto registerDto)
+        public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         { 
             if(await UserExists(registerDto.UserName)) return BadRequest();
 
@@ -32,11 +37,15 @@ namespace ChattingApp.Controllers
             };
             _context.AppUsers.Add(user);
             await _context.SaveChangesAsync();
-            return Ok(user);
+            return new UserDto
+            {
+                Username = user.UserName,
+                Token = _tokenService.CreateToken(user)
+            };
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<AppUser>> Login(LoginDto loginDto)
+        public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
             var user = await _context.AppUsers.SingleOrDefaultAsync(x=> x.UserName==loginDto.UserName);
             if(user==null) return Unauthorized("invalid username");
@@ -48,7 +57,11 @@ namespace ChattingApp.Controllers
             {
                 if (ComputedHash[i] != user.PasswordHash[i]) return Unauthorized("invalid Password");
 }
-            return user;
+            return new UserDto
+            {
+                Username = user.UserName,
+                Token = _tokenService.CreateToken(user)
+            };
 
         }
 
