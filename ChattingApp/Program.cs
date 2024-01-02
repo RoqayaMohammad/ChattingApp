@@ -4,6 +4,7 @@ using ChattingApp.Interfaces;
 using ChattingApp.Sevices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -40,4 +41,17 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+using var scope=app.Services.CreateScope();
+var services=scope.ServiceProvider;
+try
+{
+    var context = services.GetRequiredService<AppDbContext>();
+    await context.Database.MigrateAsync();
+    await Seed.SeedUsers(context);
+}
+catch(Exception ex)
+{
+    var logger= services.GetService<ILogger<Program>>();
+    logger.LogError(ex, "Error occured whilr migrating Process");
+}
 app.Run();

@@ -78,7 +78,7 @@ namespace ChattingApp.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("AppUsers");
+                    b.ToTable("AppUsers", (string)null);
                 });
 
             modelBuilder.Entity("ChattingApp.Models.Photo", b =>
