@@ -21,6 +21,10 @@ builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddIdentityServices(builder.Configuration);
 var app = builder.Build();
 
+//if (builder.Environment.IsDevelopment()){
+//    app.UseDeveloperExceptionPage();
+//}
+
 app.UseCors(builder=> builder.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5118")); //front
 
 // Configure the HTTP request pipeline.
