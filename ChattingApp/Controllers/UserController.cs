@@ -1,4 +1,7 @@
-﻿using ChattingApp.Data;
+﻿using AutoMapper;
+using ChattingApp.Data;
+using ChattingApp.DTOs;
+using ChattingApp.Interfaces;
 using ChattingApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -10,24 +13,31 @@ namespace ChattingApp.Controllers
     [Authorize]
     public class UserController : BaseApiController
     {
-        private readonly AppDbContext _context;
-        public UserController(AppDbContext context)
+        
+        private readonly IUserRepository _userRepository; 
+        private readonly IMapper _mapper;
+        public UserController( IUserRepository userRepository, IMapper mapper)
         {
-            _context = context;
+            
+            _userRepository = userRepository;
+            _mapper = mapper;
 
         }
         [HttpGet]
-        public async Task< ActionResult<IEnumerable<AppUser>>> GetUsers()
+        public async Task< ActionResult<IEnumerable<MemberDto>>> GetUsers()
         {
-           
-            return await _context.AppUsers.ToListAsync();
-        }
-        [AllowAnonymous]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<AppUser>> GetUser(int id)
-        {
+
+            var users = await _userRepository.GetMembersAsync();
             
-            return await _context.AppUsers.FindAsync(id);
+            return Ok(users);
+        }
+       
+        [HttpGet("{username}")]
+        public async Task<ActionResult<MemberDto>> GetUser(string username)
+        {
+            return await _userRepository.GetMemberAsync(username);
+            
+            
         }
     }
 }

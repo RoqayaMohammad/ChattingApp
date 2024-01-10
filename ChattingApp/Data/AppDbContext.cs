@@ -11,7 +11,9 @@ namespace ChattingApp.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Photo>()
-       .ToTable("Photos");
+             .HasOne(p => p.AppUser)
+             .WithMany(u => u.Photos)
+             .HasForeignKey(p => p.AppUserId);
         }
     }
 }

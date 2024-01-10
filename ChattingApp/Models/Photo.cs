@@ -10,7 +10,7 @@ namespace ChattingApp.Models
  
         public string Url { get; set; }
 
-        public string IsMain { get; set; }
+        public bool IsMain { get; set; }
   
         public string PublicId { get; set; }
         public int AppUserId { get; set; }
