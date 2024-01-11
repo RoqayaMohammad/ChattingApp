@@ -2,6 +2,7 @@
 using ChattingApp.Data;
 using ChattingApp.DTOs;
 using ChattingApp.Extensions;
+using ChattingApp.Helpers;
 using ChattingApp.Interfaces;
 using ChattingApp.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -27,12 +28,13 @@ namespace ChattingApp.Controllers
             _mapper = mapper;
             this.photoService = photoService;
         }
+        //[AllowAnonymous]
         [HttpGet]
-        public async Task< ActionResult<IEnumerable<MemberDto>>> GetUsers()
+        public async Task< ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams)
         {
 
-            var users = await _userRepository.GetMembersAsync();
-            
+            var users = await _userRepository.GetMembersAsync(userParams);
+            Response.AddPaginationHeader(new PaginationHeader(users.CurrentPage,users.PageSize,users.TotalCount,users.ToltalPages));
             return Ok(users);
         }
        
