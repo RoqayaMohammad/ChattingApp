@@ -1,4 +1,5 @@
-﻿using ChattingApp.Data;
+﻿using AutoMapper;
+using ChattingApp.Data;
 using ChattingApp.DTOs;
 using ChattingApp.Interfaces;
 using ChattingApp.Models;
@@ -14,33 +15,35 @@ namespace ChattingApp.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ITokenService _tokenService;
-        public AccountController(AppDbContext context, ITokenService tokenService)
+        private readonly IMapper mapper;
+
+        public AccountController(AppDbContext context, ITokenService tokenService, IMapper mapper)
         {
             _context = context;
             _tokenService = tokenService;
-
-
+            this.mapper = mapper;
         }
 
         [HttpPost("register")]
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         { 
-            if(await UserExists(registerDto.UserName)) return BadRequest();
+            if(await UserExists(registerDto.UserName)) return BadRequest("username is taken");
+            var user = mapper.Map<AppUser>(registerDto);
 
           using var hmac=new HMACSHA512();
-            var user = new AppUser
-            {
-                UserName = registerDto.UserName.ToLower(),
-                PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
-                PasswordSalt = hmac.Key
 
-            };
+            user.UserName = registerDto.UserName.ToLower();
+            user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
+            user.PasswordSalt = hmac.Key;
+
+            
             _context.AppUsers.Add(user);
             await _context.SaveChangesAsync();
             return new UserDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user)
+                Token = _tokenService.CreateToken(user),
+                KnownAS = user.KnownAs
             };
         }
 
@@ -60,7 +63,11 @@ namespace ChattingApp.Controllers
             return new UserDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user)
+                Token = _tokenService.CreateToken(user),
+                PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                KnownAS = user.KnownAs,
+                
+
             };
 
         }

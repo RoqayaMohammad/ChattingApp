@@ -11,12 +11,18 @@ namespace ChattingApp.Sevices
         private readonly Cloudinary _cloudinary;
         public PhotoService(IOptions<CloudinarySettings> config)
         {
-            var acc = new Account
-            (
-                config.Value.CloudName,
-                config.Value.ApiKey,
-                config.Value.ApiSecret);
-            _cloudinary = new Cloudinary(acc);
+            //var acc = new Account
+            //(
+            //    config.Value.CloudName,
+            //    config.Value.ApiKey,
+            //    config.Value.ApiSecret);
+            //_cloudinary = new Cloudinary(acc);
+            Account account = new Account(
+             "duslsd1tg",
+             "988757676165128",
+             "***************************");
+
+            _cloudinary = new Cloudinary(account);
         }
         public async Task<ImageUploadResult> AddPhotoASync(IFormFile file)
         {
