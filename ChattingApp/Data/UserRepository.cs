@@ -40,6 +40,12 @@ namespace ChattingApp.Data
 
             query=query.Where(u=>u.DateOfBirth>=minDob &&  u.DateOfBirth<=maxDob);
 
+            query = userparams.OrderBy switch
+            {
+                "created" => query.OrderByDescending(u => u.Created),
+                _=> query.OrderByDescending(u => u.LastActive) //_ for default
+            } ;
+
 
             return await PagedList<MemberDto>.CreateAsync(
                 query.AsNoTracking().ProjectTo<MemberDto>(_mapper.ConfigurationProvider),
