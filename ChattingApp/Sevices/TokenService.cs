@@ -19,7 +19,8 @@ namespace ChattingApp.Sevices
         {
             var claims = new List<Claim>
            {
-               new Claim(JwtRegisteredClaimNames.NameId, user.UserName)
+               new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
+               new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName)
            };
 
             //SecurityTokenDescriptor is a class in the Microsoft.IdentityModel.Tokens namespace that represents the metadata needed to create a security token, such as a JSON Web Token (JWT).
