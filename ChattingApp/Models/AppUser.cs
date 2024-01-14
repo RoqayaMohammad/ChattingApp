@@ -34,5 +34,9 @@ namespace ChattingApp.Models
 
         public virtual ICollection<Photo> Photos { get; set; } = new List<Photo>();
 
+
+        public List<Message> MessagesSent { get; set; }
+        public List<Message> MessagesReceived { get; set; }
+
     }
 }
