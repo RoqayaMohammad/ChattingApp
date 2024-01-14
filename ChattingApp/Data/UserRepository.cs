@@ -31,12 +31,27 @@ namespace ChattingApp.Data
 
         public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userparams)
         {
-            var query = _context.AppUsers
 
-                .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-                .AsNoTracking();
+            var query= _context.AppUsers.AsQueryable();
+            query = query.Where(u => u.UserName != userparams.CurrentUsername);
 
-            return await PagedList<MemberDto>.CreateAsync(query, userparams.PageNumber, userparams.PageSize);
+            var minDob=DateOnly.FromDateTime(DateTime.Today.AddYears(-userparams.MaxAge));
+            var maxDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-userparams.MinAge));
+
+            query=query.Where(u=>u.DateOfBirth>=minDob &&  u.DateOfBirth<=maxDob);
+
+
+            return await PagedList<MemberDto>.CreateAsync(
+                query.AsNoTracking().ProjectTo<MemberDto>(_mapper.ConfigurationProvider),
+                userparams.PageNumber,
+                userparams.PageSize);
+                
+            //var query = _context.AppUsers
+
+            //    .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
+            //    .AsNoTracking();
+
+            //return await PagedList<MemberDto>.CreateAsync(query, userparams.PageNumber, userparams.PageSize);
                 
         }
 
