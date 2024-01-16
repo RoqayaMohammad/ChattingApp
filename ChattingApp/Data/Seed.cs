@@ -24,13 +24,13 @@ namespace ChattingApp.Data
 
             {
 
-                using var hmac = new HMACSHA512();
+                //using var hmac = new HMACSHA512();
 
                 user.UserName = user.UserName.ToLower();
 
-                user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes("Pa$$w0rd"));
+                //user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes("Pa$$w0rd"));
 
-                user.PasswordSalt = hmac.Key;
+                //user.PasswordSalt = hmac.Key;
 
                 context.AppUsers.Add(user);
 

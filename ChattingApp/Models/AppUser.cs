@@ -1,15 +1,18 @@
-﻿using System.Reflection;
+﻿using Microsoft.AspNetCore.Identity;
+using System.Reflection;
 
 namespace ChattingApp.Models
 {
-    public class AppUser
+    public class AppUser:IdentityUser<int> //id is int
     {
-        public int Id { get; set; }
-        public string UserName { get; set; }
+        //identity will take care of them
+        //public int Id { get; set; }
+        //public string UserName { get; set; }
 
-        //public string PhotoUrl { get; set; }
-        public byte[] PasswordHash { get; set; }
-        public byte[] PasswordSalt { get; set; }
+        ////public string PhotoUrl { get; set; }
+        //public byte[] PasswordHash { get; set; }
+        //public byte[] PasswordSalt { get; set; }
+
         public DateOnly DateOfBirth;
 
 
@@ -37,6 +40,8 @@ namespace ChattingApp.Models
 
         public List<Message> MessagesSent { get; set; }
         public List<Message> MessagesReceived { get; set; }
+
+        public ICollection<AppUserRole> UserRoles { get; set; }
 
     }
 }

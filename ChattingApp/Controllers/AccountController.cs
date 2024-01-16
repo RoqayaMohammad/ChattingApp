@@ -33,11 +33,11 @@ namespace ChattingApp.Controllers
             if(await UserExists(registerDto.UserName)) return BadRequest("username is taken");
             var user = mapper.Map<AppUser>(registerDto);
 
-          using var hmac=new HMACSHA512();
+          //using var hmac=new HMACSHA512();
 
             user.UserName = registerDto.UserName.ToLower();
-            user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
-            user.PasswordSalt = hmac.Key;
+            //user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
+           // user.PasswordSalt = hmac.Key;
 
             
             _context.AppUsers.Add(user);
@@ -56,13 +56,13 @@ namespace ChattingApp.Controllers
             var user = await _context.AppUsers.SingleOrDefaultAsync(x=> x.UserName==loginDto.UserName);
             if(user==null) return Unauthorized("invalid username");
 
-            using var hmac = new HMACSHA512(user.PasswordSalt);
-            var ComputedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
-            for (int i = 0; i < ComputedHash.Length; i++)
+            //using var hmac = new HMACSHA512(user.PasswordSalt);
+            //var ComputedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
+            //for (int i = 0; i < ComputedHash.Length; i++)
 
-            {
-                if (ComputedHash[i] != user.PasswordHash[i]) return Unauthorized("invalid Password");
-}
+            
+            //    if (ComputedHash[i] != user.PasswordHash[i]) return Unauthorized("invalid Password");
+
             return new UserDto
             {
                 Username = user.UserName,
