@@ -4,6 +4,7 @@ using ChattingApp.DTOs;
 using ChattingApp.Extensions;
 using ChattingApp.Interfaces;
 using ChattingApp.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
@@ -14,14 +15,16 @@ namespace ChattingApp.Controllers
 
     public class AccountController:BaseApiController
     {
-        private readonly AppDbContext _context;
+        //private readonly AppDbContext _context;
         private readonly ITokenService _tokenService;
         private readonly IMapper mapper;
         private readonly IMessageRepository _messageRepository;
+        private readonly UserManager<AppUser> _userManager;
 
-        public AccountController(AppDbContext context, ITokenService tokenService, IMapper mapper,IMessageRepository messageRepository)
+        public AccountController(UserManager<AppUser> userManager, ITokenService tokenService, IMapper mapper,IMessageRepository messageRepository)
         {
-            _context = context;
+            _userManager = userManager;
+            //_context = context;
             _tokenService = tokenService;
             this.mapper = mapper;
             _messageRepository = messageRepository;
@@ -40,12 +43,20 @@ namespace ChattingApp.Controllers
            // user.PasswordSalt = hmac.Key;
 
             
-            _context.AppUsers.Add(user);
-            await _context.SaveChangesAsync();
+            //_context.AppUsers.Add(user);
+            //await _context.SaveChangesAsync();
+
+
+            var result= await _userManager.CreateAsync(user,registerDto.Password);
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+            if(!roleResult.Succeeded) return BadRequest(roleResult.Errors);
+
             return new UserDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 KnownAS = user.KnownAs
             };
         }
@@ -53,8 +64,14 @@ namespace ChattingApp.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
-            var user = await _context.AppUsers.SingleOrDefaultAsync(x=> x.UserName==loginDto.UserName);
+            var user = await _userManager.Users
+                .Include(p=>p.Photos)
+                .SingleOrDefaultAsync(x=> x.UserName==loginDto.UserName);  
+
             if(user==null) return Unauthorized("invalid username");
+
+            var result= await _userManager.CheckPasswordAsync(user,loginDto.Password);
+            if(!result) return Unauthorized("Invalid PAssword");
 
             //using var hmac = new HMACSHA512(user.PasswordSalt);
             //var ComputedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
@@ -66,7 +83,7 @@ namespace ChattingApp.Controllers
             return new UserDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
                 KnownAS = user.KnownAs,
                 
@@ -84,7 +101,7 @@ namespace ChattingApp.Controllers
 
             private async Task<bool> UserExists(string username)
             {
-            return await _context.AppUsers.AnyAsync(x=> x.UserName == username);
+            return await _userManager.Users.AnyAsync(x=> x.UserName == username);
             }
     }
 }
