@@ -17,24 +17,28 @@ namespace ChattingApp.Controllers
     public class UserController : BaseApiController
     {
         
-        private readonly IUserRepository _userRepository; 
+       
         private readonly IMapper _mapper;
         private readonly IPhotoService photoService;
+        private readonly IUnitOfWork uow;
 
-        public UserController( IUserRepository userRepository, IMapper mapper,IPhotoService photoService)
+        public UserController(  IMapper mapper,IPhotoService photoService,IUnitOfWork uow)
         {
             
-            _userRepository = userRepository;
+          
             _mapper = mapper;
             this.photoService = photoService;
+            this.uow = uow;
         }
         //[AllowAnonymous]
         [Authorize(Roles="Admin")]
         [HttpGet]
         public async Task< ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams)
         {
-
-            var users = await _userRepository.GetMembersAsync(userParams);
+            var user =await uow.UserRepository.GetUSerByUsernameAsync(User.GetUsername());
+            userParams.CurrentUsername=User.GetUsername();
+           
+            var users = await uow.UserRepository.GetMembersAsync(userParams);
             Response.AddPaginationHeader(new PaginationHeader(users.CurrentPage,users.PageSize,users.TotalCount,users.ToltalPages));
             return Ok(users);
         }
@@ -42,7 +46,7 @@ namespace ChattingApp.Controllers
         [HttpGet("{username}")]
         public async Task<ActionResult<MemberDto>> GetUser(string username)
         {
-            return await _userRepository.GetMemberAsync(username);
+            return await uow.UserRepository.GetMemberAsync(username);
             
             
         }
@@ -50,13 +54,13 @@ namespace ChattingApp.Controllers
         public async Task<ActionResult> UpdateUser(MemberUpdateDto memberUpdateDto)
         {
 
-            var user = await _userRepository.GetUSerByUsernameAsync(User.GetUsername());
+            var user = await uow.UserRepository.GetUSerByUsernameAsync(User.GetUsername());
             if (user == null)
             {
                 return NotFound();
             }
             _mapper.Map(memberUpdateDto, user);
-            if (await _userRepository.SaveAllAsync())
+            if (await uow.Complete())
             {
                 return NoContent();
             }
@@ -66,7 +70,7 @@ namespace ChattingApp.Controllers
         [HttpPost("add-photo")]
         public async Task<ActionResult<PhotoDto>> AddPhoto(IFormFile file)
         {
-            var user = await _userRepository.GetUSerByUsernameAsync(User.GetUsername());
+            var user = await uow.UserRepository.GetUSerByUsernameAsync(User.GetUsername());
             if (user == null) { return NotFound(); }
             var result=await photoService.AddPhotoASync(file);
             if(result.Error !=null) { return BadRequest(result.Error.Message); }
@@ -79,14 +83,14 @@ namespace ChattingApp.Controllers
 
             if (user.Photos.Count == 0) photo.IsMain = true;
             user.Photos.Add(photo);
-            if(await _userRepository.SaveAllAsync()) return CreatedAtAction(nameof(GetUser), new { username = user.UserName },_mapper.Map<PhotoDto>(photo));
+            if(await uow.Complete()) return CreatedAtAction(nameof(GetUser), new { username = user.UserName },_mapper.Map<PhotoDto>(photo));
             return BadRequest("Problem adding photo");
         }
 
         [HttpPut("set-main-photo/{photoId}")]
         public async Task<ActionResult> SetMainPhoto(int photoId)
         {
-            var user =await _userRepository.GetUSerByUsernameAsync(User.GetUsername());
+            var user =await uow.UserRepository.GetUSerByUsernameAsync(User.GetUsername());
             if (user == null) { return NotFound();}
             var photo=  user.Photos.FirstOrDefault(x=>x.Id==photoId);
             if (photo == null)  return NotFound();
@@ -94,14 +98,14 @@ namespace ChattingApp.Controllers
             var currentMain = user.Photos.FirstOrDefault(x => x.IsMain);
             if(currentMain!=null) currentMain.IsMain = false;
             photo.IsMain=true;
-            if (await _userRepository.SaveAllAsync()) return NoContent();
+            if (await uow.Complete()) return NoContent();
             return BadRequest("problem setting the main photo");
         }
 
         [HttpDelete("delete-photo/{photoId}")]
         public async Task<ActionResult> DeletePhoto(int photoId)
         {
-            var user = await _userRepository.GetUSerByUsernameAsync(User.GetUsername());
+            var user = await uow.UserRepository.GetUSerByUsernameAsync(User.GetUsername());
             var photo = user.Photos.FirstOrDefault(x=>x.Id==photoId);
             if (photo == null) return NotFound();
             if(photo.IsMain) return BadRequest("you cannot delete your main photo");
@@ -111,7 +115,7 @@ namespace ChattingApp.Controllers
                 if (result.Error != null) return BadRequest(result.Error.Message);
             }
             user.Photos.Remove(photo);
-            if (await _userRepository.SaveAllAsync()) return Ok  ();
+            if (await uow.Complete()) return Ok  ();
 
             return BadRequest("Problem Deleting Photo");
             
