@@ -15,7 +15,8 @@ namespace ChattingApp.SignalR
         }
         public override async Task OnConnectedAsync()
         {
-            await tracker.USerConnected(Context.User.GetUsername(), Context.ConnectionId);
+          var isOnline=  await tracker.USerConnected(Context.User.GetUsername(), Context.ConnectionId);
+            if(isOnline)
             await Clients.Others.SendAsync("UserIsOnline", Context.User.GetUsername());
 
             var currentUsers = await tracker.GetOnlineUsers();
@@ -24,7 +25,8 @@ namespace ChattingApp.SignalR
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            await tracker.UserDisconnected(Context.User.GetUsername(), Context.ConnectionId);
+           var isOffline= await tracker.UserDisconnected(Context.User.GetUsername(), Context.ConnectionId);
+            if(isOffline)
             await Clients.Others.SendAsync("UserIsOffline", Context.User.GetUsername());
 
             var currentUsers=await tracker.GetOnlineUsers();
