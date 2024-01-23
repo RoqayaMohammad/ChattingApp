@@ -8,7 +8,7 @@ namespace ChattingApp.Interfaces
     {
         void Update(AppUser user);
 
-         Task<bool> SaveAllAsync();
+         
         Task<IEnumerable<AppUser>> GetUsersAsync();
 
         Task<AppUser> GetUserByIdAsync(int id);
@@ -17,5 +17,7 @@ namespace ChattingApp.Interfaces
 
         Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams);
         Task<MemberDto> GetMemberAsync(string username);
+
+        
     }
 }

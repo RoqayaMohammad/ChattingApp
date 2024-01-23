@@ -71,15 +71,14 @@ namespace ChattingApp.Data
             return await _context.AppUsers.Include(p => p.Photos).SingleOrDefaultAsync(x => x.UserName == username);
         }
 
+        
+
         public async Task<IEnumerable<AppUser>> GetUsersAsync()
         {
             return await _context.AppUsers.Include(u => u.Photos).ToListAsync();
         }
 
-        public async Task<bool> SaveAllAsync()
-        {
-            return await _context.SaveChangesAsync() > 0;
-        }
+       
 
        
 
