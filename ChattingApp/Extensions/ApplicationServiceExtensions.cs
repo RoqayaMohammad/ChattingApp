@@ -2,6 +2,7 @@
 using ChattingApp.Helpers;
 using ChattingApp.Interfaces;
 using ChattingApp.Sevices;
+using ChattingApp.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChattingApp.Extensions
@@ -22,7 +23,8 @@ namespace ChattingApp.Extensions
             services.AddScoped<IPhotoService, PhotoService>();
             services.AddScoped<LogUserActivity>();
             services.AddScoped <IMessageRepository, MessageRepository>();
-
+            services.AddSignalR();
+            services.AddSingleton<PresenceTracker>();
             return services;
         }
     }

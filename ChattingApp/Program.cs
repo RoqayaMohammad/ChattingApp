@@ -3,6 +3,7 @@ using ChattingApp.Extensions;
 using ChattingApp.Interfaces;
 using ChattingApp.Models;
 using ChattingApp.Sevices;
+using ChattingApp.SignalR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +29,7 @@ var app = builder.Build();
 //    app.UseDeveloperExceptionPage();
 //}
 
-app.UseCors(builder=> builder.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5118")); //front
+app.UseCors(builder=> builder.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:5118")); //front
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -43,6 +44,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHub<PresenceHub>("Hubs/presence");
+app.MapHub<MessageHub>("Hubs/message");
+
+
 using var scope=app.Services.CreateScope();
 var services=scope.ServiceProvider;
 try
@@ -51,6 +56,7 @@ try
     var userManager=services.GetRequiredService<UserManager<AppUser>>();
     var roleManager= services.GetRequiredService<RoleManager<AppRole>>();
     await context.Database.MigrateAsync();
+    await context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE [Connections]");
     await Seed.SeedUsers(userManager,roleManager);
 }
 catch(Exception ex)
