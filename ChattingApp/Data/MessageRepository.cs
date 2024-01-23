@@ -39,6 +39,11 @@ namespace ChattingApp.Data
             return await _context.Connections.FindAsync(ConnectionId);
         }
 
+        public async Task<Group> GetGroupForConnection(string connectiodId)
+        {
+            return await _context.Groups.Include(x=>x.Connections).Where(x=>x.Connections.Any(c=>c.ConnectionId == connectiodId)).FirstOrDefaultAsync();
+        }
+
         public async Task<Message> GetMessage(int id)
         {
             return await _context.Messages.FindAsync(id);
