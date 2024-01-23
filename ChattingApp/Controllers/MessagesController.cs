@@ -15,15 +15,17 @@ namespace ChattingApp.Controllers
 
     public class MessagesController : BaseApiController
     {
-        private readonly IUserRepository userRepository;
+       
         private readonly IMessageRepository messageRepository;
         private readonly IMapper mapper;
+        private readonly IUnitOfWork uow;
 
-        public MessagesController(IUserRepository userRepository, IMessageRepository messageRepository, IMapper mapper)
+        public MessagesController( IMessageRepository messageRepository, IMapper mapper, IUnitOfWork uow)
         {
-            this.userRepository = userRepository;
+            
             this.messageRepository = messageRepository;
             this.mapper = mapper;
+            this.uow = uow;
         }
 
         [HttpPost]
@@ -36,8 +38,8 @@ namespace ChattingApp.Controllers
                 return BadRequest("You Cannot Sent Messaged to yourself");
             }
 
-            var sender = await userRepository.GetUSerByUsernameAsync(username);
-            var recipient = await userRepository.GetUSerByUsernameAsync(createMessageDto.RecipientUsername);
+            var sender = await uow.UserRepository.GetUSerByUsernameAsync(username);
+            var recipient = await uow.UserRepository.GetUSerByUsernameAsync(createMessageDto.RecipientUsername);
 
             if (recipient == null) { return NotFound(); }
 
@@ -52,7 +54,7 @@ namespace ChattingApp.Controllers
 
             messageRepository.AddMessage(Message);
 
-            if (await messageRepository.SaveAllAsync()) return Ok(mapper.Map<MessageDto>(Message));
+            if (await uow.Complete()) return Ok(mapper.Map<MessageDto>(Message));
             return BadRequest("faild to send message");
         }
 
@@ -74,7 +76,7 @@ namespace ChattingApp.Controllers
             if(message.SenderUsername == username ) message.SenderDeleted= true;
             if(message.RecipientUsername==username ) message.RecipientDeleted= true;
             if (message.SenderDeleted && message.RecipientDeleted) { messageRepository.DeleteMessage(message); }
-            if (await messageRepository.SaveAllAsync()) return Ok();
+            if (await uow.Complete()) return Ok();
             return BadRequest("Problem deleting the messages");
         }
     }
